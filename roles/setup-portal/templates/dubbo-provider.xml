@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+  xmlns:dubbo="http://code.alibabatech.com/schema/dubbo"
+  xsi:schemaLocation="http://www.springframework.org/schema/beans  
+  http://www.springframework.org/schema/beans/spring-beans-3.1.xsd  
+  http://code.alibabatech.com/schema/dubbo  
+  http://code.alibabatech.com/schema/dubbo/dubbo.xsd">
+  <!-- 设置服务端超时时间及重试次数  -->
+  <dubbo:provider delay="-1" timeout="6000" retries="0"/> 
+  <!-- 提供方应用信息，用于计算依赖关系 -->
+  <dubbo:application name="security-app" />  
+          
+  <!--zookeeper注册中心 -->  
+  <dubbo:registry protocol="zookeeper" address="zookeeper://{{ groups['portal'][0] }}:2181"/>
+  <!--使用multicast广播注册中心暴露服务地址 -->  
+  <!--<dubbo:registry address="multicast://10.57.41.19:1234" />-->
+  <!-- 用dubbo协议在20880端口暴露服务 -->
+  <dubbo:protocol name="dubbo" port="20880"/>  
+  <dubbo:service interface="com.neunn.rpc.service.RpcUserService" ref="userService"/>  
+  <dubbo:service interface="com.neunn.rpc.service.RpcTenantService" ref="tenantService"/>
+  <dubbo:service interface="com.neunn.rpc.service.RpcTenantCustomTypeService" ref="rpcTenantCustomTypeService"/>
+  <dubbo:service interface="com.neunn.rpc.service.RpcTenantGradeService" ref="rpcTenantGradeService"/>
+  <dubbo:service interface="com.neunn.rpc.service.RpcCommonService" ref="rpcCommonService"/>
+  <dubbo:service interface="com.neunn.rpc.service.RpcCephService" ref="rpcCephService"/>
+  <dubbo:service interface="com.neunn.rpc.service.RpcLogService" ref="rpcLogService"/>
+  <dubbo:service interface="com.neunn.rpc.service.RpcGroupService" ref="rpcGroupService"/>
+  <dubbo:service interface="com.neunn.rpc.service.RpcResourceService" ref="rpcResourceService"/>
+  <dubbo:service interface="com.neunn.rpc.service.RpcRoleService" ref="rpcRoleService"/>
+   
+  <!-- 和本地bean一样实现服务 -->  
+  <bean id="userService" class="com.neunn.cloud.base.filter.rpc.service.RpcUserServiceImpl"/>
+  <bean id="tenantService" class="com.neunn.cloud.base.filter.rpc.service.RpcTenantServiceImpl"/>  
+  <bean id="rpcTenantCustomTypeService" class="com.neunn.cloud.base.filter.rpc.service.RpcTenantCustomTypeServiceImpl"/>
+  <bean id="rpcTenantGradeService" class="com.neunn.cloud.base.filter.rpc.service.RpcTenantGradeServiceImpl"/>
+  <bean id="rpcCommonService" class="com.neunn.cloud.base.filter.rpc.service.RpcCommonServiceImpl"/>
+  <bean id="rpcCephService" class="com.neunn.cloud.base.filter.rpc.service.RpcCephServiceImpl"/>
+  <bean id="rpcLogService" class="com.neunn.cloud.base.filter.rpc.service.RpcLogServiceImpl"/>
+  <bean id="rpcGroupService" class="com.neunn.cloud.base.filter.rpc.service.RpcGroupServiceImpl"/>
+  <bean id="rpcResourceService" class="com.neunn.cloud.base.filter.rpc.service.RpcResourceServiceImpl"/>
+  <bean id="rpcRoleService" class="com.neunn.cloud.base.filter.rpc.service.RpcRoleServiceImpl"/>
+</beans>
+

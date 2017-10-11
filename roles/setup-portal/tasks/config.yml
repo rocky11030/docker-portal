@@ -1,0 +1,268 @@
+---
+- name: install python-pip
+  apt:
+    name: python-pip
+    state: present
+
+- name: install Python-dev
+  apt:
+    name: python-dev
+    state: present
+
+- name: install jdk7
+  apt:
+    name: openjdk-7-jdk
+
+- name: install libmysqld-dev
+  apt:
+    name: libmysqld-dev
+    state: present
+    
+- name: pip install MySQL-python
+  shell: pip install MySQL-python
+
+- name: install mysql-client
+  apt:
+    name: mysql-client
+    state: present
+
+- name: create database
+  mysql_db:
+    name: "{{ item }}"
+    state: present
+    login_host: "{{ database_address }}"
+    login_user: "{{ database_user }}"
+    login_port: "{{ database_port }}"
+    login_password: "{{ database_password }}"
+  with_items:
+    - "{{ ncloud_database_name }}"
+    - "{{ manager_database_name }}"
+    - "{{ authcenter_database_name }}"
+    
+#- name: useradd
+#  mysql_user:
+#  name: "{{ db_username }}"
+#  password: "{{ db_password_mw }}"
+#  priv: '*.*:ALL'
+#  state: present
+#  login_host: "{{ db_ip }}"
+#  login_user: "{{ db_manager_user }}"
+#  login_port: 3306
+#  login_password: "{{ db_manager_passwd }}"
+                                                                                                        
+#- name: Authorized neunncloud user remote login
+#  shell: mysql -h {{ db_ip }} -u {{ db_manager_user }} -p{{ db_manager_passwd }} -e 'grant all privileges on *.* to {{ db_username }} @"%" identified by "{{ db_password_mw }}"'
+                                            
+#- name: Authorized neunncloud user remote login
+#  shell: mysql -h {{ db_ip }} -u {{ db_manager_user }} -p{{ db_manager_passwd }} -e 'flush privileges'
+
+- name: mkdir basedata
+  file: path=/tmp/basedata state=directory
+
+- name: scp db script
+  template:
+    src: "{{ item }}"
+    dest: /tmp/basedata/
+  with_items:
+    - AuthCenter.sql
+    - basev2.sql
+    - neunnManager.sql
+                                    
+- name: import authcenter data
+  mysql_db:
+    state: import
+    name: "{{ authcenter_database_name }}"
+    target: /tmp/basedata/AuthCenter.sql
+    login_host: "{{ database_address }}"
+    login_user: "{{ database_user }}"
+    login_port: "{{ database_port }}"
+    login_password: "{{ database_password }}"
+                                                                                   
+- name: import base  data
+  mysql_db:
+    state: import
+    name: "{{ ncloud_database_name }}"
+    target: /tmp/basedata/basev2.sql
+    login_host: "{{ database_address }}"
+    login_user: "{{ database_user }}"
+    login_port: "{{ database_port }}"
+    login_password: "{{ database_password }}"
+                                                            
+  
+- name: import manager  data  
+  mysql_db:
+    state: import
+    name: "{{ manager_database_name }}"
+    target: /tmp/basedata/neunnManager.sql
+    login_host: "{{ database_address }}" 
+    login_user: "{{ database_user }}"
+    login_port: "{{ database_port }}"
+    login_password: "{{ database_password }}"
+
+- name: mkdir /etc/redis
+  file: path=/etc/redis state=directory
+
+- name: modify redis port config
+  template:
+    src: redis.conf.j2
+    dest: /etc/redis/redis.conf
+    mode: 0644
+
+- name: mkdir /etc/zookeeper
+  file: path=/etc/zookeeper/conf state=directory
+
+- name: Overwrite myid file.
+  template: src=myid.j2 dest=/etc/zookeeper/conf/myid
+
+- name: Overwrite default config file
+  template: src=zoo.cfg.j2 dest=/etc/zookeeper/conf/zoo.cfg
+
+- name: mkdir /etc/nginx
+  file: path=/etc/nginx state=directory
+
+- name: scp my2.conf
+  template:
+    src: my2.conf.j2
+    dest: "/etc/nginx/my2.conf"
+
+- name: mkdir /opt/conf/authcenter
+  file: path=/opt/conf/authcenter/ state=directory
+
+- name: mkdir /opt/conf/ncloud
+  file: path=/opt/conf/ncloud/ state=directory
+
+- name: mkdir /opt/conf/manager
+  file: path=/opt/conf/manager/ state=directory
+
+- name: mkdir /opt/conf/portal
+  file: path=/opt/conf/portal/ state=directory
+
+- name: mkdir /opt/conf/ns
+  file: path=/opt/conf/ns/ state=directory
+
+- name: scp applicationContext.xml
+  template:
+    src: applicationContext.xml.j2
+    dest: /opt/conf/applicationContext.xml
+
+- name: scp application.xml
+  template:
+    src: application.xml.j2
+    dest: /opt/conf/application.xml
+
+- name: scp logstash-base.conf
+  template:
+    src: logstash-base.conf
+    dest: /opt/conf/logstash-base.conf
+
+- name: Scp config file
+  template:
+    src: "{{ item.name }}"
+    dest: "/opt/conf/authcenter/"
+  with_items:
+     - { name: 'authcenter.config.properties', dir: 'WEB-INF/classes'}
+     - { name: 'authcenter.jdbc.properties', dir: 'WEB-INF'}
+     - { name: 'dubbo-provider.xml', dir: 'WEB-INF'}
+     - { name: 'log4j.properties', dir: 'WEB-INF'}
+
+- name: Scp config file
+  template:
+    src: "{{ item.name }}"
+    dest: "/opt/conf/ncloud/"
+  with_items:
+     - { name: 'ncloud.config.properties', dir: 'WEB-INF/classes'}
+     - { name: 'ncloud.jdbc.properties', dir: 'WEB-INF'}
+     - { name: 'ncloud.dubbo-consumer.xml', dir: 'WEB-INF'}
+     - { name: 'log4j.properties', dir: 'WEB-INF'}
+
+- name: Scp config file
+  template:
+    src: "{{ item.name }}"
+    dest: "/opt/conf/manager/"
+  with_items:
+     - { name: 'manager.config.properties', dir: 'WEB-INF/classes'}
+     - { name: 'manager.jdbc.properties', dir: 'WEB-INF'}
+     - { name: 'manager.dubbo-consumer.xml', dir: 'WEB-INF'}
+     - { name: 'log4j.properties', dir: 'WEB-INF'}
+
+- name: Scp druid jar
+  copy:
+    src: "druid-0.2.25.jar"
+    dest: "/opt/conf/"
+
+- name: generate druid password
+  shell: "java -cp /opt/conf/druid-0.2.25.jar com.alibaba.druid.filter.config.ConfigTools '{{ database_password }}'"
+  register: password_mv
+
+- name: modify authcenter jdbc
+  lineinfile:
+    path: /opt/conf/authcenter/authcenter.jdbc.properties
+    insertafter: state=EOF
+    line: "jdbc.password={{ password_mv.stdout }}"
+
+- name: modify ncloud jdbc
+  lineinfile:
+    path: /opt/conf/ncloud/ncloud.jdbc.properties
+    insertafter: state=EOF
+    line: "jdbc.password={{ password_mv.stdout }}"
+
+- name: modify manager jdbc
+  lineinfile:
+    path: /opt/conf/manager/manager.jdbc.properties
+    insertafter: state=EOF
+    line: "jdbc.password={{ password_mv.stdout }}"
+
+- name: generte admin ops api key-委派到rgw节点执行,此执行脚本不包括rgw节点
+  #shell: docker exec ceph_rgw radosgw-admin user create --uid admin --display_name admin
+  shell: radosgw-admin user create --uid admin --display_name admin
+  register: rgw_user_json 
+  delegate_to: "{{ groups['ceph_rgw'][0] }}"
+  tags:
+    - ceph_rgw
+
+- name: grant admin key read write-委派到rgw节点执行,此执行脚本不包括rgw节点
+  #shell: docker exec ceph_rgw radosgw-admin caps add --uid=admin --caps="users=read, write; usage=read,write;buckets=read, write"
+  shell: radosgw-admin caps add --uid=admin --caps="users=read, write; usage=read,write;buckets=read, write"
+  delegate_to: "{{ groups['ceph_rgw'][0] }}"
+  tags:
+    - ceph_rgw
+
+- name: Reading json from variable
+  set_fact:
+    key_files: "{{ (rgw_user_json.stdout | from_json) }}"
+
+- name: modify authcenter config property
+  lineinfile:
+    path: /opt/conf/authcenter/authcenter.config.properties
+    insertafter: state=EOF
+    line: "s3.admin.accesskey={{ key_files['keys'][0]['access_key'] }}"
+
+- name: modify authcenter config property
+  lineinfile:
+    path: /opt/conf/authcenter/authcenter.config.properties
+    insertafter: state=EOF
+    line: "s3.admin.secretkey={{ key_files['keys'][0]['secret_key'] }}"
+
+
+- name: scp constant.js
+  template:
+    src: constant.js
+    dest: "/opt/conf/portal/constant.js"
+  tags:
+    - script
+
+- name: modify /etc/hosts
+  lineinfile:
+    path: /etc/hosts
+    insertafter: state=EOF
+    line: "{{ hostvars[groups['portal'][0]]['ansible_' + hostvars[groups['portal'][0]]['api_interface']]['ipv4']['address'] }} elasticsearch.server"
+  tags:
+    - script
+
+- name: scp dubbo-consumer.xml
+  template:
+    src: dubbo-consumer.j2
+    dest: /opt/conf/ns/dubbo-consumer.xml
+  tags:
+    - script
+

@@ -1,0 +1,4 @@
+[portal]
+10.9.40.9 ansible_ssh_user=root ansible_ssh_pass=Neunn2016
+[ceph_rgw]
+10.9.40.6 ansible_ssh_user=root ansible_ssh_pass=Neunn2016

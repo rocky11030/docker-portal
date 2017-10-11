@@ -1,0 +1,69 @@
+---
+#openstack
+kolla_internal_fqdn: 10.9.40.200
+openstack_auth:
+    auth_url: "http://{{ kolla_internal_fqdn }}:35357"
+    username: "admin"
+    password: "Neunn2017@)!&"
+    project_name: "admin"
+    domain_name: "default"
+#network
+api_interface: bond0
+
+#database
+database_address: 10.9.40.200
+database_user: root
+database_port: 3306
+database_password: "Neunn2016@)!^"
+ncloud_database_name: basev2
+manager_database_name: neunnManager
+authcenter_database_name: AuthCenter
+
+#zookeeper
+myid: 1
+tick_time: 2000
+data_dir: /var/lib/zookeeper
+log_dir: /var/log/zookeeper
+init_limit: 10
+sync_limit: 5
+servers: ""
+
+#nginx
+nginx_port: 801
+
+#application
+mail_smtp_host: smtp.exmail.qq.com
+mail_smtp_port: 25
+mail_sender: cloud_service@neunn.com
+mail_mail_sender_password: CloudAdmin123
+rabbitmq_host: 10.9.40.2
+rabbitmq_port: 5672
+rabbitmq_user: admin
+rabbitmq_password: admin@2017
+
+s3_open: true
+
+#rgw
+ceph_rgw: 10.9.40.6
+access_key: 4K4FBWJS63FFC71HDIFR
+secret_key: 9gKC9MVihZuvID057oWG32wcWeq55LLMVrEOLWoh
+
+#
+app_name: portalnd 
+
+#start_portal
+ncloud_services:
+   ncloud-server:
+    container_name: ncloud-server
+    group: ncloud-server
+    enabled: true
+    image: 10.10.20.96/ncloud/ubuntu-source-ncloud-server:2.5.0
+    volumes:
+      - "/etc/kolla/ncloud-server/ncloud-server/:/var/lib/kolla/config_files/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla/"
+      - "/etc/redis:/etc/redis"
+      - "/opt/conf:/opt/conf"
+      - "/etc/nginx:/etc/nginx"
+      - "/tmp/basedata:/tmp/basedata"
+

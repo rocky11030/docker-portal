@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+  xmlns:dubbo="http://code.alibabatech.com/schema/dubbo"
+  xsi:schemaLocation="http://www.springframework.org/schema/beans  
+  http://www.springframework.org/schema/beans/spring-beans-3.1.xsd  
+  http://code.alibabatech.com/schema/dubbo  
+  http://code.alibabatech.com/schema/dubbo/dubbo.xsd">
+  
+    <!--消费方应用名，用于计算依赖关系，不是匹配条件，不要与提供方一样 -->  
+    <dubbo:application name="consumer-of-security-app" />  
+    <!--zookeeper注册中心 -->  
+    <dubbo:registry protocol="zookeeper" address="zookeeper://{{ groups['portal'][0] }}:2181" />
+    <!--使用multicast广播注册中心暴露的服务地址 -->  
+    <!--<dubbo:registryaddress="multicast://10.57.41.19:1234" /> -->  
+    <!-- 生成远程服务代理，可以和本地bean一样使用userService-->  
+    <dubbo:reference id="rpcUserService" interface="com.neunn.rpc.service.RpcUserService" /> 
+	<dubbo:reference id="rpcTenantService" interface="com.neunn.rpc.service.RpcTenantService" /> 
+	<dubbo:reference id="rpcTenantCustomTypeService" interface="com.neunn.rpc.service.RpcTenantCustomTypeService" /> 
+	<dubbo:reference id="rpcTenantGradeService" interface="com.neunn.rpc.service.RpcTenantGradeService" />
+	<dubbo:reference id="rpcCommonService" interface="com.neunn.rpc.service.RpcCommonService" />
+	<dubbo:reference id="rpcCephService" interface="com.neunn.rpc.service.RpcCephService" />
+	<dubbo:reference id="rpcLogService" interface="com.neunn.rpc.service.RpcLogService" />
+	<dubbo:reference id="rpcGroupService" interface="com.neunn.rpc.service.RpcGroupService" />
+	<dubbo:reference id="rpcResourceService" interface="com.neunn.rpc.service.RpcResourceService" />
+	<dubbo:reference id="rpcRoleService" interface="com.neunn.rpc.service.RpcRoleService" />
+</beans>

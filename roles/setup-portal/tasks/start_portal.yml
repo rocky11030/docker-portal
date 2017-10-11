@@ -1,0 +1,5 @@
+---
+- name: running ncloud container
+  vars:
+     ncloud_server: "{{ ncloud_services['ncloud-server'] }}"
+  shell: docker run -idt --name ncloud-server --net=host -m 16384m -v /etc/localtime:/etc/localtime -v /opt/conf:/opt/conf -v /etc/kolla//ncloud-server/:/var/lib/kolla/config_files/ -v /etc/nginx:/etc/nginx -v /etc/redis:/etc/redis -v /tmp/basedata:/tmp/basedata {{ ncloud_server.image }}

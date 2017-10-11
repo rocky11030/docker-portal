@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xmlns:rabbit="http://www.springframework.org/schema/rabbit"
+          xsi:schemaLocation=
+          "http://www.springframework.org/schema/rabbit
+          http://www.springframework.org/schema/rabbit/spring-rabbit.xsd
+          http://www.springframework.org/schema/beans
+          http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    
+   <!--
+   <rabbit:connection-factory id="connectionFactory"
+                               host="192.168.250.5" port="5672"
+                               username="guest" password="guest"
+                               channel-cache-size="3"/>
+   -->
+   
+   <rabbit:connection-factory id="connectionFactory"
+                               host="{{ rabbitmq_host }}" port="5672"
+                               username="{{ rabbitmq_user }}" password="{{ rabbitmq_password }}"
+                               channel-cache-size="3"/>
+   
+                               
+   <rabbit:admin id="adminCon" connection-factory="connectionFactory"/>
+   
+   <rabbit:template id="amqpTemplate" connection-factory="connectionFactory" exchange="exchange"/>
+                               
+   
+</beans>
+

@@ -1,0 +1,58 @@
+server {
+    listen {{nginx_port}};
+    server_name  www.base.net;
+    access_log  logs/quancha.access.log;
+    error_log  logs/quancha.error.log;
+    proxy_set_header real-ip $remote_addr;
+    ## send request back to apache ##
+	location  ^~ /base/ {
+		if ($request_method = OPTIONS ) {
+		   more_set_headers "Access-Control-Allow-Origin: *";
+		   more_set_headers "Access-Control-Allow-Credentials: true"; 
+		   more_set_headers "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS";    
+		   more_set_headers "Access-Control-Allow-Headers: X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,TimeStamp,X-Neunn-UUID,region,poolName,X-Neunn-Sign";     
+		   return 200;
+		}
+		   proxy_pass  http://{{groups['portal'][0]}}:8801/;  ##自己设定的Base项目的IP和端口号
+		   #Proxy Settings
+		   more_set_headers "Access-Control-Allow-Origin: *";
+		   more_set_headers "Access-Control-Allow-Credentials: true"; 
+		   more_set_headers "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS";    
+		   more_set_headers "Access-Control-Allow-Headers: X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,TimeStamp,X-Neunn-UUID,region,poolName,X-Neunn-Sign";            
+	}
+
+	location ^~ /auth/ {
+		if ($request_method = OPTIONS ) {
+		   more_set_headers "Access-Control-Allow-Origin: *";
+		   more_set_headers "Access-Control-Allow-Credentials: true"; 
+		   more_set_headers "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS";    
+		   more_set_headers "Access-Control-Allow-Headers: X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,TimeStamp,X-Neunn-UUID,region,poolName,X-Neunn-Sign";     
+		   return 200;
+		}
+		   proxy_pass  http://{{groups['portal'][0]}}:8888/;  ##自己设定的AuthCenter项目的IP和端口号
+		   #Proxy Settings
+		   more_set_headers "Access-Control-Allow-Origin: *";
+		   more_set_headers "Access-Control-Allow-Credentials: true"; 
+		   more_set_headers "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS";    
+		   more_set_headers "Access-Control-Allow-Headers: X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,TimeStamp,X-Neunn-UUID,region,poolName,X-Neunn-Sign";                  
+	}
+
+    location ^~ / {
+       if ($request_method = OPTIONS ) {
+           more_set_headers "Access-Control-Allow-Origin: *";
+           more_set_headers "Access-Control-Allow-Credentials: true";
+           more_set_headers "Access-Control-Allow-Methods: GET,POST, PUT, DELETE, OPTIONS";
+           more_set_headers "Access-Control-Allow-Headers: x-amz-acl,Content-MD5,X-Amz-User-Agent,X-Amz-Date,Authorization,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,TimeStamp,X-Neunn-UUID,region,poolName,X-Neunn-Sign";
+           return 200;
+        }
+           proxy_pass  http://{{ kolla_internal_fqdn }}:6780/; ##自己设定的S3项目的IP和端口号
+           #Proxy Settings
+           more_set_headers "Access-Control-Expose-Headers: ETag";
+           more_set_headers "Access-Control-Allow-Origin: *";
+           more_set_headers "Access-Control-Allow-Credentials: true";
+           more_set_headers "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS";
+           more_set_headers "Access-Control-Allow-Headers: x-amz-acl,Content-MD5,X-Amz-User-Agent,X-Amz-Date,Authorization,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,TimeStamp,X-Neunn-UUID,region,poolName,X-Neunn-Sign";
+    }
+    
+}
+

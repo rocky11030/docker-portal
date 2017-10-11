@@ -1,0 +1,98 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xmlns:context="http://www.springframework.org/schema/context"
+          xmlns:mongo="http://www.springframework.org/schema/data/mongo"
+          xmlns:rabbit="http://www.springframework.org/schema/rabbit"
+          xsi:schemaLocation=
+          "http://www.springframework.org/schema/rabbit
+          http://www.springframework.org/schema/rabbit/spring-rabbit.xsd
+          http://www.springframework.org/schema/context
+          http://www.springframework.org/schema/context/spring-context-3.0.xsd
+          http://www.springframework.org/schema/data/mongo http://www.springframework.org/schema/data/mongo/spring-mongo-1.0.xsd
+          http://www.springframework.org/schema/beans
+          http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <context:property-placeholder location="classpath:mongo.properties"/>
+    
+    <context:component-scan base-package="com.neunn.message" />
+
+    <mongo:mongo id="mongo" host="${mongo.host}" port="${mongo.port}">
+      <mongo:options
+       connections-per-host="${mongo.connectionsPerHost}"
+       threads-allowed-to-block-for-connection-multiplier="${mongo.threadsAllowedToBlockForConnectionMultiplier}"
+       connect-timeout="${mongo.connectTimeout}"
+       max-wait-time="${mongo.maxWaitTime}"
+       auto-connect-retry="${mongo.autoConnectRetry}"
+       socket-keep-alive="${mongo.socketKeepAlive}"
+       socket-timeout="${mongo.socketTimeout}"
+       slave-ok="${mongo.slaveOk}"
+       write-number="1"
+       write-timeout="0"
+       write-fsync="true"/>
+    </mongo:mongo>
+
+   <mongo:db-factory id="mongoDbFactory" dbname="message_center" mongo-ref="mongo" username="${mongo.username}" password="${mongo.password}"/>
+   
+   <bean id="mongoTemplate" class="org.springframework.data.mongodb.core.MongoTemplate">
+     <constructor-arg name="mongoDbFactory" ref="mongoDbFactory"/>
+   </bean>
+   
+   <rabbit:connection-factory id="connectionFactory"
+                               host="{{ rabbitmq_host }}" port="5672"
+                               username="{{rabbitmq_user}}" password="{{rabbitmq_password}}"
+                               channel-cache-size="3"/>
+   <rabbit:admin id="adminCon" connection-factory="connectionFactory"/>
+                               
+    <rabbit:queue name="MAIL_QUEUE" durable="false"/>
+    <rabbit:queue name="MONGODB_QUEUE" durable="false"/>
+    <rabbit:queue name="MESSAGE_STATE" durable="false"/>
+    
+    <bean id="mailListenerContainerFactory"
+      class="org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory">
+    <property name="connectionFactory" ref="connectionFactory"/>
+    <property name="concurrentConsumers" value="2"/>
+    <property name="maxConcurrentConsumers" value="10"/>
+   </bean>
+   
+   <bean id="mongoDBListenerContainerFactory"
+      class="org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory">
+    <property name="connectionFactory" ref="connectionFactory"/>
+    <property name="concurrentConsumers" value="3"/>
+    <property name="maxConcurrentConsumers" value="10"/>
+   </bean>
+   
+   <bean id="messageStateListenerContainerFactory"
+      class="org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory">
+    <property name="connectionFactory" ref="connectionFactory"/>
+    <property name="concurrentConsumers" value="2"/>
+    <property name="maxConcurrentConsumers" value="10"/>
+   </bean>
+   
+   <rabbit:topic-exchange name="exchange">
+	 <rabbit:bindings>
+		<rabbit:binding queue="MAIL_QUEUE" pattern="#.mail.#" />
+		<rabbit:binding queue="MONGODB_QUEUE" pattern="#.mongodb.#" />
+		<rabbit:binding queue="MESSAGE_STATE" pattern="#.messagestate.#" />
+	 </rabbit:bindings>
+   </rabbit:topic-exchange>
+   
+   <rabbit:template id="amqpTemplate" connection-factory="connectionFactory" exchange="exchange"/>
+   
+   <rabbit:annotation-driven/>
+
+   <bean id="mailConfig" class="com.neunn.mail.configuration.Configuration">
+     <property name="MAIL_SMTP_HOST" value="{{mail_smtp_host}}"/>
+     <property name="MAIL_SMTP_PORT" value="{{mail_smtp_port}}"/>
+     <property name="MAIL_SENDER" value="{{mail_sender}}"/>
+     <property name="MAIL_SENDER_PASSWORD" value="{{mail_mail_sender_password}}"/>
+     <property name="MAIL_SUBJECT" value="虚机监控告警"/>
+   <property name="MAIL_TYPE" value="text/html;charset=utf-8 "/>
+   </bean>
+   
+   <bean class="com.neunn.mail.sender.MutiMailSender">
+     <constructor-arg name="configuration" ref="mailConfig"/>
+   </bean>
+
+</beans>
+

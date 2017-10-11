@@ -1,0 +1,38 @@
+---
+- name: update resolv.conf
+  shell: echo 'nameserver 10.20.0.131' > /etc/resolv.conf
+
+- name: copy the ubuntu docker file
+  copy: src={{ item.src }} dest={{ item.dest }}
+  with_items:
+    - {src: 'libsystemd-journal0_208-8ubuntu8_amd64.deb', dest: '/tmp/libsystemd-journal0_208-8ubuntu8_amd64.deb'}
+    - {src: 'libltdl7_2.4.2-1.7ubuntu1_amd64.deb', dest: '/tmp/libltdl7_2.4.2-1.7ubuntu1_amd64.deb'}
+    - {src: 'docker-engine_1.12.1-0~trusty_amd64.deb', dest: '/tmp/docker-engine_1.12.1-0~trusty_amd64.deb'}
+
+- name: install docker 1.12
+  shell:  dpkg -i /tmp/libsystemd-journal0_208-8ubuntu8_amd64.deb && dpkg -i /tmp/libltdl7_2.4.2-1.7ubuntu1_amd64.deb && dpkg -i /tmp/docker-engine_1.12.1-0~trusty_amd64.deb
+  tags:
+    - installs
+
+- name: start docker service
+  service: name=docker state=started
+  tags:
+    - starts
+
+- name: copy ali source
+  copy: src=ali.list dest=/etc/apt/sources.list
+
+- name: update source
+  shell: apt-get update
+
+- name: install python-pip
+  apt: name=python-pip state=present
+
+- name: pip install docker-py
+  pip: name=docker-py state=present
+
+- name: registry images department
+  shell: echo 'DOCKER_OPTS="--insecure-registry 10.10.20.96"' >> /etc/default/docker
+
+- name: restart docker service
+  service: name=docker state=restarted

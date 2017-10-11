@@ -1,0 +1,6 @@
+---
+- include: ubuntu_docker_install.yml
+- include: config.yml
+  tags:
+    - config
+- include: start_portal.yml
